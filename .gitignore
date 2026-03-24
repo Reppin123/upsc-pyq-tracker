@@ -3,6 +3,8 @@
 
 # Allow tracker files
 !.gitignore
+!.github/
+!.github/**
 !index.html
 !manifest.json
 !sw.js
