@@ -1,0 +1,18 @@
+# Ignore everything by default
+*
+
+# Allow tracker files
+!.gitignore
+!index.html
+!manifest.json
+!sw.js
+!icon-192.png
+!icon-512.png
+!*-tracker.html
+!*-questions*.js
+!*-data.js
+!*-app.js
+!forumias-mains-questions.js
+!*-mains-questions.js
+!current-affairs/
+!current-affairs/ca-*.js
