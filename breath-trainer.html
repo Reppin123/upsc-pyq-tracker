@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Breath Trainer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            min-height: 100dvh;
+            transition: background-color 0.5s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 24px;
+        }
+
+        .screen.active { display: flex; }
+
+        /* ---- Setup ---- */
+        #setup {
+            max-width: 420px;
+            margin: 0 auto;
+            justify-content: flex-start;
+            padding-top: 56px;
+        }
+
+        h1 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; color: #777; font-size: 14px; margin-bottom: 36px; }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #16213e;
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .input-group label {
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .phase-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stepper button {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: #0f3460;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stepper button:active { background: #1a5276; transform: scale(0.93); }
+
+        .stepper .val {
+            font-size: 22px;
+            font-weight: 600;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .stepper .unit { font-size: 13px; color: #777; }
+
+        .summary {
+            text-align: center;
+            color: #555;
+            font-size: 13px;
+            margin-top: 24px;
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        #start-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            background: #e94560;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        #start-btn:active { background: #c73e54; transform: scale(0.98); }
+
+        /* ---- Training ---- */
+        #training {
+            position: fixed;
+            inset: 0;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .round-info { font-size: 15px; color: #666; margin-bottom: 10px; letter-spacing: 0.5px; }
+
+        .phase-label {
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 24px;
+            transition: color 0.3s;
+        }
+
+        .ring-wrap {
+            position: relative;
+            width: 230px;
+            height: 230px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .ring-wrap svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .ring-wrap svg circle {
+            fill: none;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+
+        .ring-bg { stroke: #ffffff0d; stroke-width: 3; }
+        .ring-fg { stroke-width: 3.5; transition: stroke 0.3s; }
+
+        .big-num {
+            font-size: 100px;
+            font-weight: 200;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s;
+            z-index: 1;
+        }
+
+        .elapsed { font-size: 13px; color: #444; margin-bottom: 44px; letter-spacing: 0.3px; }
+
+        #stop-btn {
+            padding: 12px 44px;
+            border: 1.5px solid #444;
+            border-radius: 12px;
+            background: transparent;
+            color: #888;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        #stop-btn:active { background: #ffffff0a; }
+
+        /* ---- Complete ---- */
+        #complete {
+            position: fixed;
+            inset: 0;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .done-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .done-info { font-size: 15px; color: #777; margin-bottom: 36px; }
+
+        #again-btn {
+            padding: 14px 52px;
+            border: none;
+            border-radius: 14px;
+            background: #e94560;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #again-btn:active { transform: scale(0.97); }
+
+        /* ---- Phase colors ---- */
+        .c-inhale { color: #4FC3F7 !important; }
+        .c-exhale { color: #81C784 !important; }
+        .c-hold   { color: #FFB74D !important; }
+
+        .bg-inhale { background-color: #0d1f2f; }
+        .bg-exhale { background-color: #0d1f14; }
+        .bg-hold   { background-color: #251c0d; }
+
+        .dot-inhale { background: #4FC3F7; }
+        .dot-exhale { background: #81C784; }
+        .dot-hold   { background: #FFB74D; }
+    </style>
+</head>
+<body>
+
+<!-- ========== SETUP ========== -->
+<div id="setup" class="screen active">
+    <h1>Breath Trainer</h1>
+    <p class="subtitle">CO&#8322; tolerance &amp; breath hold training</p>
+
+    <div class="input-group">
+        <label><span class="phase-dot dot-inhale"></span> Inhale</label>
+        <div class="stepper">
+            <button onclick="adj('inhale',-1)">&#8722;</button>
+            <span class="val" id="v-inhale">5</span>
+            <span class="unit">s</span>
+            <button onclick="adj('inhale',1)">+</button>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label><span class="phase-dot dot-exhale"></span> Exhale</label>
+        <div class="stepper">
+            <button onclick="adj('exhale',-1)">&#8722;</button>
+            <span class="val" id="v-exhale">5</span>
+            <span class="unit">s</span>
+            <button onclick="adj('exhale',1)">+</button>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label><span class="phase-dot dot-hold"></span> Hold</label>
+        <div class="stepper">
+            <button onclick="adj('hold',-1)">&#8722;</button>
+            <span class="val" id="v-hold">10</span>
+            <span class="unit">s</span>
+            <button onclick="adj('hold',1)">+</button>
+        </div>
+    </div>
+
+    <div class="input-group" style="margin-top:16px">
+        <label>Duration</label>
+        <div class="stepper">
+            <button onclick="adj('dur',-1)">&#8722;</button>
+            <span class="val" id="v-dur">5</span>
+            <span class="unit">min</span>
+            <button onclick="adj('dur',1)">+</button>
+        </div>
+    </div>
+
+    <p class="summary" id="summary"></p>
+    <button id="start-btn" onclick="go()">Start</button>
+</div>
+
+<!-- ========== TRAINING ========== -->
+<div id="training" class="screen">
+    <p class="round-info" id="round-info"></p>
+    <p class="phase-label" id="phase-label"></p>
+    <div class="ring-wrap">
+        <svg viewBox="0 0 230 230">
+            <circle class="ring-bg" cx="115" cy="115" r="102" />
+            <circle class="ring-fg" id="ring" cx="115" cy="115" r="102"
+                    stroke="#4FC3F7"
+                    stroke-dasharray="641"
+                    stroke-dashoffset="0" />
+        </svg>
+        <span class="big-num" id="big-num"></span>
+    </div>
+    <p class="elapsed" id="elapsed"></p>
+    <button id="stop-btn" onclick="stop()">Stop</button>
+</div>
+
+<!-- ========== COMPLETE ========== -->
+<div id="complete" class="screen">
+    <p class="done-title">Session Complete</p>
+    <p class="done-info" id="done-info"></p>
+    <button id="again-btn" onclick="showScreen('setup')">Go Again</button>
+</div>
+
+<script>
+/* ---------- state ---------- */
+const S = { inhale: 5, exhale: 5, hold: 10, dur: 5 };
+let tid = null;
+let wl  = null;
+
+const CIRC = 2 * Math.PI * 102;                       // ring circumference
+const CLR  = { inhale: '#4FC3F7', exhale: '#81C784', hold: '#FFB74D' };
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    if (id !== 'training') document.body.className = '';
+}
+
+function adj(key, d) {
+    const max = key === 'dur' ? 60 : 120;
+    S[key] = Math.max(1, Math.min(max, S[key] + d));
+    $('v-' + key).textContent = S[key];
+    refreshSummary();
+}
+
+function refreshSummary() {
+    const cyc = S.inhale + S.exhale + S.hold;
+    const rounds = Math.max(1, Math.floor(S.dur * 60 / cyc));
+    const eff = rounds * cyc;
+    $('summary').textContent = cyc + 's / round  ·  ' + rounds + ' rounds  ·  ' + fmt(eff);
+}
+
+/* ---------- speech ---------- */
+function say(text) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.rate = 1.0;
+    window.speechSynthesis.speak(u);
+}
+
+/* ---------- wake lock ---------- */
+async function lockScreen() {
+    try {
+        if ('wakeLock' in navigator) wl = await navigator.wakeLock.request('screen');
+    } catch (_) { /* no-op */ }
+}
+function unlockScreen() { if (wl) { wl.release(); wl = null; } }
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && tid) lockScreen();
+});
+
+/* ---------- timeline ---------- */
+function buildTimeline() {
+    const cyc = S.inhale + S.exhale + S.hold;
+    const rounds = Math.max(1, Math.floor(S.dur * 60 / cyc));
+    const phases = [
+        { name: 'Inhale', key: 'inhale', dur: S.inhale },
+        { name: 'Exhale', key: 'exhale', dur: S.exhale },
+        { name: 'Hold',   key: 'hold',   dur: S.hold   }
+    ];
+    const tl = [];
+    for (let r = 1; r <= rounds; r++) {
+        for (const p of phases) {
+            for (let c = p.dur; c >= 1; c--) {
+                tl.push({
+                    phase: p.name, key: p.key, pDur: p.dur,
+                    count: c, round: r, rounds: rounds,
+                    first: c === p.dur
+                });
+            }
+        }
+    }
+    return tl;
+}
+
+/* ---------- run session ---------- */
+function go() {
+    const tl = buildTimeline();
+    if (!tl.length) return;
+
+    showScreen('training');
+    lockScreen();
+
+    const labelEl = $('phase-label');
+    const numEl   = $('big-num');
+    const roundEl = $('round-info');
+    const timeEl  = $('elapsed');
+    const ring    = $('ring');
+    const total   = tl.length;
+
+    /* --- prep countdown --- */
+    let prep = 3;
+    labelEl.textContent = 'GET READY';
+    labelEl.className = 'phase-label';
+    numEl.textContent = prep;
+    numEl.className = 'big-num';
+    roundEl.textContent = tl[0].rounds + ' rounds';
+    timeEl.textContent = '0:00 / ' + fmt(total);
+    ring.style.stroke = '#555';
+    ring.style.strokeDashoffset = '0';
+    ring.style.transition = 'none';
+    document.body.className = '';
+
+    say('Get ready');
+
+    tid = setInterval(() => {
+        prep--;
+        if (prep > 0) {
+            numEl.textContent = prep;
+            say(prep);
+        } else {
+            clearInterval(tid);
+            run(tl, total);
+        }
+    }, 1000);
+}
+
+function run(tl, total) {
+    let i = 0;
+
+    const labelEl = $('phase-label');
+    const numEl   = $('big-num');
+    const roundEl = $('round-info');
+    const timeEl  = $('elapsed');
+    const ring    = $('ring');
+
+    function tick() {
+        const t = tl[i];
+
+        /* visuals */
+        labelEl.textContent = t.phase;
+        labelEl.className = 'phase-label c-' + t.key;
+        numEl.textContent = t.count;
+        numEl.className = 'big-num c-' + t.key;
+        document.body.className = 'bg-' + t.key;
+        roundEl.textContent = 'Round ' + t.round + ' / ' + t.rounds;
+        timeEl.textContent = fmt(i) + ' / ' + fmt(total);
+
+        /* ring */
+        ring.style.stroke = CLR[t.key];
+        const frac = t.count / t.pDur;
+
+        if (t.first) {
+            /* jump to full instantly, then restore transition */
+            ring.style.transition = 'stroke 0.3s';
+            ring.style.strokeDashoffset = '0';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    ring.style.transition = 'stroke-dashoffset 0.92s linear, stroke 0.3s';
+                });
+            });
+        } else {
+            ring.style.strokeDashoffset = String(CIRC * (1 - frac));
+        }
+
+        /* voice */
+        if (t.first) {
+            say(t.key === 'inhale' ? 'Round ' + t.round + '. ' + t.phase : t.phase);
+        } else {
+            say(t.count);
+        }
+
+        i++;
+
+        if (i >= total) {
+            clearInterval(tid);
+            tid = null;
+            unlockScreen();
+            setTimeout(() => {
+                say('Session complete. Well done.');
+                showScreen('complete');
+                $('done-info').textContent = t.rounds + ' rounds  ·  ' + fmt(total);
+            }, 1300);
+        }
+    }
+
+    tick();
+    tid = setInterval(tick, 1000);
+}
+
+function stop() {
+    clearInterval(tid);
+    tid = null;
+    window.speechSynthesis.cancel();
+    unlockScreen();
+    showScreen('setup');
+}
+
+/* ---------- init ---------- */
+refreshSummary();
+</script>
+</body>
+</html>
